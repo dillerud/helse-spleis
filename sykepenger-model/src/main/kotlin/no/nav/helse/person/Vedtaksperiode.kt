@@ -229,7 +229,7 @@ internal class Vedtaksperiode private constructor(
     internal fun gjenopptaBehandling(hendelse: IAktivitetslogg): Boolean {
         if (tilstand.erFerdigBehandlet) return false
         kontekst(hendelse)
-        tilstand.håndter(this, hendelse)
+        tilstand.gjenopptaBehandling(this, hendelse)
         return true
     }
 
@@ -1012,7 +1012,7 @@ internal class Vedtaksperiode private constructor(
             hendelse.error("Forventet ikke utbetaling i %s", type.name)
         }
 
-        fun håndter(
+        fun gjenopptaBehandling(
             vedtaksperiode: Vedtaksperiode,
             gjenopptaBehandling: IAktivitetslogg
         ) {
@@ -1167,7 +1167,7 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.håndterInntektsmelding(inntektsmelding) { vedtaksperiode.avgjørTilstandForGap(AvventerSøknadUferdigForlengelse, AvventerSøknadUferdigGap) }
         }
 
-        override fun håndter(
+        override fun gjenopptaBehandling(
             vedtaksperiode: Vedtaksperiode,
             gjenopptaBehandling: IAktivitetslogg
         ) {
@@ -1228,7 +1228,7 @@ internal class Vedtaksperiode private constructor(
             håndterOverlappendeSykmelding(vedtaksperiode, sykmelding)
         }
 
-        override fun håndter(
+        override fun gjenopptaBehandling(
             vedtaksperiode: Vedtaksperiode,
             gjenopptaBehandling: IAktivitetslogg
         ) {
@@ -1278,7 +1278,7 @@ internal class Vedtaksperiode private constructor(
 
         override fun makstid(vedtaksperiode: Vedtaksperiode, tilstandsendringstidspunkt: LocalDateTime): LocalDateTime = LocalDateTime.MAX
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             if (vedtaksperiode.arbeidsgiver.tidligerePerioderFerdigBehandlet(vedtaksperiode)) vedtaksperiode.tilstand(
                 gjenopptaBehandling,
                 AvventerHistorikkRevurdering
@@ -1306,7 +1306,7 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.mottaUtbetalingTilRevurdering(hendelse, utbetaling)
         }
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             if (!vedtaksperiode.utbetalinger.erAvsluttet()) return
             gjenopptaBehandling.info("Går til avsluttet fordi revurdering er fullført via en annen vedtaksperiode")
             vedtaksperiode.tilstand(gjenopptaBehandling, Avsluttet)
@@ -1485,7 +1485,7 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.håndterOverlappendeSøknad(søknad)
         }
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             vedtaksperiode.tilstand(gjenopptaBehandling, AvventerInntektsmeldingEllerHistorikkFerdigGap)
         }
 
@@ -1521,7 +1521,7 @@ internal class Vedtaksperiode private constructor(
         }
 
         // TODO: kan fjernes nå https://trello.com/c/Eoug7QnR er gjort
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             if (!vedtaksperiode.harInntektsmelding()) return
             vedtaksperiode.tilstand(gjenopptaBehandling, AvventerHistorikk)
         }
@@ -1544,7 +1544,7 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.håndterOverlappendeSøknad(søknad)
         }
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             vedtaksperiode.håndterMuligForlengelse(
                 gjenopptaBehandling,
                 vedtaksperiode.avgjørTilstandForInntekt(),
@@ -1562,7 +1562,7 @@ internal class Vedtaksperiode private constructor(
 
         override fun nyPeriodeFør(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Sykmelding) {}
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             vedtaksperiode.håndterMuligForlengelse(gjenopptaBehandling, AvventerSøknadFerdigForlengelse, AvventerSøknadFerdigGap)
         }
 
@@ -1615,7 +1615,7 @@ internal class Vedtaksperiode private constructor(
             søknad.info("Fullført behandling av søknad")
         }
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             vedtaksperiode.tilstand(gjenopptaBehandling, AvventerSøknadFerdigGap)
         }
     }
@@ -1739,7 +1739,7 @@ internal class Vedtaksperiode private constructor(
             sikkerlogg.warn("Vedtaksperioden ${vedtaksperiode.id} er i $type, men alle perioder foran (hos alle arbeidsgivere) er ferdigbehandlet")
         }
 
-        override fun håndter(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
+        override fun gjenopptaBehandling(vedtaksperiode: Vedtaksperiode, gjenopptaBehandling: IAktivitetslogg) {
             if (!vedtaksperiode.harInntekt()) return vedtaksperiode.tilstand(gjenopptaBehandling, AvventerInntektsmeldingEllerHistorikkFerdigGap)
             vedtaksperiode.tilstand(gjenopptaBehandling, AvventerHistorikk)
         }
