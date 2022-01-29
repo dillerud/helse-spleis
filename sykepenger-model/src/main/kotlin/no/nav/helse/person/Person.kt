@@ -269,6 +269,10 @@ class Person private constructor(
         }
     }
 
+    internal fun sendGjenopptaBehandling(hendelse: ArbeidstakerHendelse) {
+        arbeidsgivere.forEach { it.håndter(Arbeidsgiver.GjenopptaBehandling(hendelse)) }
+    }
+
     fun annullert(hendelseskontekst: Hendelseskontekst, event: PersonObserver.UtbetalingAnnullertEvent) {
         observers.forEach { it.annullering(hendelseskontekst, event) }
     }
