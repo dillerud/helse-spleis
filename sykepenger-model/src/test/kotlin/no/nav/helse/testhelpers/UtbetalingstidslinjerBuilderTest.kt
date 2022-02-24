@@ -24,10 +24,29 @@ internal class UtbetalingstidslinjerBuilderTest {
     }
 
     @Test
-    fun `utelate dager`() {
+    fun `utelate dager før`() {
+        val tidslinje = tidslinjeOf(4.UTELATE, 1.NAV)
+        assertEquals(1, tidslinje.size)
+        assertEquals(1, tidslinje.inspektør.navDagTeller)
+        assertEquals(5.januar, tidslinje.first().dato)
+        assertEquals(5.januar, tidslinje.last().dato)
+    }
+
+    @Test
+    fun `utelate dager etter`() {
+        val tidslinje = tidslinjeOf(1.NAV, 6.UTELATE)
+        assertEquals(1, tidslinje.size)
+        assertEquals(1, tidslinje.inspektør.navDagTeller)
+        assertEquals(1.januar, tidslinje.first().dato)
+        assertEquals(1.januar, tidslinje.last().dato)
+    }
+
+    @Test
+    fun `utelate dager midt i`() {
         val tidslinje = tidslinjeOf(1.NAV, 6.UTELATE, 1.NAV)
-        assertEquals(2, tidslinje.size)
+        assertEquals(8, tidslinje.size)
         assertEquals(2, tidslinje.inspektør.navDagTeller)
+        assertEquals(6, tidslinje.inspektør.ukjentDagTeller)
         assertEquals(1.januar, tidslinje.first().dato)
         assertEquals(8.januar, tidslinje.last().dato)
     }

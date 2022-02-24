@@ -6,11 +6,7 @@ import no.nav.helse.person.PersonObserver.Utbetalingsdag.Dagtype.*
 import no.nav.helse.serde.api.BegrunnelseDTO
 import no.nav.helse.sykdomstidslinje.Sykdomstidslinje
 import no.nav.helse.testhelpers.*
-import no.nav.helse.testhelpers.NAV
-import no.nav.helse.testhelpers.tidslinjeOf
-import no.nav.helse.utbetalingstidslinje.Utbetalingstidslinje
-import no.nav.helse.utbetalingstidslinje.Utbetalingstidslinje.Utbetalingsdag.UkjentDag
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -59,13 +55,7 @@ internal class UtbetalingsdagerBuilderTest {
     @Test
     fun `tidslinje med ukjentdag`() {
         val builder = UtbetalingsdagerBuilder(Sykdomstidslinje())
-        val utbetalingstidslinje = tidslinjeOf(3.NAV).plus(tidslinjeOf(1.UTELATE, 1.NAV)) { venstre, høyre -> when (venstre) {
-            is Utbetalingstidslinje.Utbetalingsdag.NavDag -> when (høyre) {
-                is Utbetalingstidslinje.Utbetalingsdag.NavDag -> UkjentDag(venstre.dato, venstre.økonomi)
-                else -> venstre
-            }
-            else -> høyre
-        }}
+        val utbetalingstidslinje = tidslinjeOf(1.NAV, 1.UTELATE, 1.NAV)
         utbetalingstidslinje.accept(builder)
         assertEquals(listOf(
             Utbetalingsdag(1.januar, NavDag),

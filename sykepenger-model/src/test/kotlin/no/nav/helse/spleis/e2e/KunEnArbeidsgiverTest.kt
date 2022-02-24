@@ -1406,7 +1406,7 @@ internal class KunEnArbeidsgiverTest : AbstractEndToEndTest() {
         assertNoErrors(1.vedtaksperiode.filter())
         assertEquals(Utbetaling.GodkjentUtenUtbetaling, inspektør.utbetalingtilstand(0))
         assertTilstander(
-            0,
+            1.vedtaksperiode,
             START,
             MOTTATT_SYKMELDING_FERDIG_GAP,
             AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK_FERDIG_GAP,
@@ -1415,7 +1415,7 @@ internal class KunEnArbeidsgiverTest : AbstractEndToEndTest() {
         )
 
         assertTilstander(
-            1,
+            2.vedtaksperiode,
             START,
             MOTTATT_SYKMELDING_FERDIG_GAP
         )

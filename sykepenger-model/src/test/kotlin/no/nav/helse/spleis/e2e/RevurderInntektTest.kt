@@ -16,7 +16,8 @@ import no.nav.helse.økonomi.Inntekt.Companion.daglig
 import no.nav.helse.økonomi.Inntekt.Companion.månedlig
 import no.nav.helse.økonomi.Inntekt.Companion.årlig
 import no.nav.helse.økonomi.Prosentdel.Companion.prosent
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -359,21 +360,14 @@ internal class RevurderInntektTest : AbstractEndToEndTest() {
             "Perioden er avslått på grunn av at inntekt er under krav til minste sykepengegrunnlag",
             AktivitetsloggFilter.person()
         )
-        assertFalse(utbetalingTilRevurdering.utbetalingstidslinje().harUtbetalinger())
+        assertEquals(0, utbetalingTilRevurdering.utbetalingstidslinje().inspektør.navDagTeller)
     }
 
     @Test
     fun `revurdering ved skjæringstidspunkt hos infotrygd`() {
         val historikk1 = listOf(
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 29.januar(2018), 18.februar(2018), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 19.februar(2018), 18.mars(2018), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 19.mars(2018), 2.april(2018), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 3.april(2018), 14.mai(2018), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 15.mai(2018), 3.juni(2018), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 4.juni(2018), 22.juni(2018), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 18.mars(2020), 31.mars(2020), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 1.april(2020), 30.april(2020), 100.prosent, 1000.daglig),
-            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 1.mai(2020), 31.mai(2020), 100.prosent, 1000.daglig)
+            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 29.januar(2018), 22.juni(2018), 100.prosent, 1000.daglig),
+            ArbeidsgiverUtbetalingsperiode(ORGNUMMER, 18.mars(2020), 31.mai(2020), 100.prosent, 1000.daglig)
         )
         val inntektsopplysning1 = listOf(
             Inntektsopplysning(ORGNUMMER, 18.mars(2020), INNTEKT, true),

@@ -472,8 +472,7 @@ internal class UtbetalingTest {
 
     @Test
     fun `korrelasjonsId er lik på brukerutbetalinger direkte fra Infotrygd`() {
-        val tidslinje =
-            beregnUtbetalinger(tidslinjeOf(31.NAV(dekningsgrunnlag = 1000, refusjonsbeløp = 0)), infotrygdtidslinje = tidslinjeOf(5.NAV, startDato = 1.januar))
+        val tidslinje = beregnUtbetalinger(tidslinjeOf(5.UTELATE, 26.NAV(dekningsgrunnlag = 1000, refusjonsbeløp = 0)))
         val første = opprettUtbetaling(tidslinje.kutt(21.januar))
         val andre = opprettUtbetaling(tidslinje, første)
         assertEquals(første.inspektør.personOppdrag.fagsystemId(), andre.inspektør.personOppdrag.fagsystemId())
@@ -483,10 +482,7 @@ internal class UtbetalingTest {
 
     @Test
     fun `korrelasjonsId er lik på brukerutbetalinger fra Infotrygd`() {
-        val tidslinje = beregnUtbetalinger(
-            tidslinjeOf(16.AP, 15.NAV(dekningsgrunnlag = 1000, refusjonsbeløp = 0), 28.NAV(dekningsgrunnlag = 1000, refusjonsbeløp = 0)),
-            infotrygdtidslinje = tidslinjeOf(5.NAV, startDato = 1.februar)
-        )
+        val tidslinje = beregnUtbetalinger(tidslinjeOf(16.AP, 15.NAV(dekningsgrunnlag = 1000, refusjonsbeløp = 0), 5.UTELATE, 23.NAV(dekningsgrunnlag = 1000, refusjonsbeløp = 0)))
         val første = opprettUtbetaling(tidslinje.kutt(31.januar))
         val andre = opprettUtbetaling(tidslinje.kutt(20.februar), første)
         val tredje = opprettUtbetaling(tidslinje, andre)
@@ -498,7 +494,7 @@ internal class UtbetalingTest {
 
     @Test
     fun `korrelasjonsId er lik på arbeidsgiveroppdrag direkte fra Infotrygd`() {
-        val tidslinje = beregnUtbetalinger(tidslinjeOf(31.NAV), infotrygdtidslinje = tidslinjeOf(5.NAV, startDato = 1.januar))
+        val tidslinje = beregnUtbetalinger(tidslinjeOf(5.UTELATE, 26.NAV))
         val første = opprettUtbetaling(tidslinje.kutt(21.januar))
         val andre = opprettUtbetaling(tidslinje, første)
         assertEquals(første.inspektør.arbeidsgiverOppdrag.inspektør.fagsystemId(), andre.inspektør.arbeidsgiverOppdrag.inspektør.fagsystemId())
@@ -508,7 +504,7 @@ internal class UtbetalingTest {
 
     @Test
     fun `korrelasjonsId er lik på arbeidsgiveroppdrag fra Infotrygd`() {
-        val tidslinje = beregnUtbetalinger(tidslinjeOf(16.AP, 15.NAV, 28.NAV), infotrygdtidslinje = tidslinjeOf(5.NAV, startDato = 1.februar))
+        val tidslinje = beregnUtbetalinger(tidslinjeOf(16.AP, 15.NAV, 5.UTELATE, 23.NAV))
         val første = opprettUtbetaling(tidslinje.kutt(31.januar))
         val andre = opprettUtbetaling(tidslinje.kutt(20.februar), første)
         val tredje = opprettUtbetaling(tidslinje, andre)
@@ -770,17 +766,8 @@ internal class UtbetalingTest {
 
     private fun String.gRegulering() = Grunnbeløpsregulering(UUID.randomUUID(), "", "", "", LocalDate.now(), this)
 
-    private fun beregnUtbetalinger(tidslinje: Utbetalingstidslinje, infotrygdtidslinje: Utbetalingstidslinje = Utbetalingstidslinje()) = tidslinje.let {
-        tidslinje.plus(infotrygdtidslinje) { spleisdag, infotrygddag ->
-            when (infotrygddag) {
-                is Utbetalingstidslinje.Utbetalingsdag.NavDag, is Utbetalingstidslinje.Utbetalingsdag.NavHelgDag -> Utbetalingstidslinje.Utbetalingsdag.UkjentDag(
-                    spleisdag.dato,
-                    spleisdag.økonomi
-                )
-                else -> spleisdag
-            }
-        }
-    }.also { MaksimumUtbetaling(listOf(tidslinje), aktivitetslogg, 1.januar).betal() }
+    private fun beregnUtbetalinger(tidslinje: Utbetalingstidslinje) =
+        tidslinje.also { MaksimumUtbetaling(listOf(tidslinje), aktivitetslogg, 1.januar).betal() }
 
     private fun opprettGodkjentUtbetaling(
         tidslinje: Utbetalingstidslinje = tidslinjeOf(16.AP, 5.NAV(3000)),

@@ -35,7 +35,7 @@ internal class InfotrygdUtbetalingstidslinjedekoratørTest {
             regler = NormalArbeidstaker,
             subsumsjonObserver = MaskinellJurist()
         ))
-        val dekoratør = InfotrygdUtbetalingstidslinjedekoratør(builder, 1.februar)
+        val dekoratør = InfotrygdUtbetalingstidslinjedekoratør(builder, 1.februar, emptyList())
         val tidslinje = 31.S + 28.S
         tidslinje.accept(ArbeidsgiverperiodeBuilder(Arbeidsgiverperiodeteller.NormalArbeidstaker, dekoratør, MaskinellJurist()))
         assertEquals(1.februar til 28.februar, builder.result().periode())
