@@ -25,6 +25,10 @@ interface PersonObserver {
 
     data class VedtaksperiodeAvbruttEvent(
         val gjeldendeTilstand: TilstandType,
+        val hendelser: Set<UUID>,
+        val harSøknad: Boolean,
+        val harInntektsmelding: Boolean,
+        val harNærliggendeUtbetaling: Boolean
     )
 
     data class OpprettOppgaveForSpeilsaksbehandlereEvent(

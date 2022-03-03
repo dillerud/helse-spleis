@@ -46,6 +46,9 @@ import no.nav.helse.person.Arbeidsgiver.Companion.håndter
 import no.nav.helse.person.Arbeidsgiver.Companion.kanOverstyreTidslinje
 import no.nav.helse.person.Arbeidsgiver.Companion.minstEttSykepengegrunnlagSomIkkeKommerFraSkatt
 import no.nav.helse.person.Arbeidsgiver.Companion.nåværendeVedtaksperioder
+import no.nav.helse.person.Dokumentsporing.Companion.harInntektsmelding
+import no.nav.helse.person.Dokumentsporing.Companion.harSøknad
+import no.nav.helse.person.Dokumentsporing.Companion.ider
 import no.nav.helse.person.Vedtaksperiode.Companion.ALLE
 import no.nav.helse.person.Vedtaksperiode.Companion.TIDLIGERE_OG_ETTERGØLGENDE
 import no.nav.helse.person.etterlevelse.MaskinellJurist
@@ -362,7 +365,14 @@ class Person private constructor(
         observers.forEach { it.opprettOppgave(aktivitetslogg.hendelseskontekst(), event) }
     }
 
-    fun vedtaksperiodeAvbrutt(aktivitetslogg: IAktivitetslogg, event: PersonObserver.VedtaksperiodeAvbruttEvent) {
+    internal fun vedtaksperiodeAvbrutt(aktivitetslogg: IAktivitetslogg, periode: Periode, tilstandType: TilstandType, hendelser: Set<Dokumentsporing>) {
+        val event = PersonObserver.VedtaksperiodeAvbruttEvent(
+            gjeldendeTilstand = tilstandType,
+            hendelser = hendelser.ider(),
+            harSøknad = hendelser.harSøknad(),
+            harInntektsmelding = hendelser.harInntektsmelding(),
+            harNærliggendeUtbetaling = harNærliggendeUtbetaling(periode)
+        )
         observers.forEach { it.vedtaksperiodeAvbrutt(aktivitetslogg.hendelseskontekst(), event) }
     }
 

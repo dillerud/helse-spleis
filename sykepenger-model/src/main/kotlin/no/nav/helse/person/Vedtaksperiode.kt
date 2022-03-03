@@ -37,6 +37,7 @@ import no.nav.helse.person.Aktivitetslogg.Aktivitet.Behov.Companion.medlemskap
 import no.nav.helse.person.Aktivitetslogg.Aktivitet.Behov.Companion.omsorgspenger
 import no.nav.helse.person.Aktivitetslogg.Aktivitet.Behov.Companion.opplæringspenger
 import no.nav.helse.person.Aktivitetslogg.Aktivitet.Behov.Companion.pleiepenger
+import no.nav.helse.person.Dokumentsporing.Companion.harSøknad
 import no.nav.helse.person.Dokumentsporing.Companion.ider
 import no.nav.helse.person.ForlengelseFraInfotrygd.JA
 import no.nav.helse.person.ForlengelseFraInfotrygd.NEI
@@ -404,11 +405,12 @@ internal class Vedtaksperiode private constructor(
         kontekst(hendelse)
         hendelse.info("Forkaster vedtaksperiode: %s", this.id.toString())
         this.utbetalinger.forkast(hendelse)
-        person.vedtaksperiodeAvbrutt(
+        arbeidsgiver.vedtaksperiodeAvbrutt(
             hendelse,
-            PersonObserver.VedtaksperiodeAvbruttEvent(
-                gjeldendeTilstand = tilstand.type,
-            )
+            hendelseIder.toSet(),
+            periode,
+            skjæringstidspunkt,
+            tilstand.type
         )
         if (this.tilstand !in setOf(Avsluttet, RevurderingFeilet)) tilstand(hendelse, TilInfotrygd)
         return true
@@ -2551,9 +2553,7 @@ internal class Vedtaksperiode private constructor(
         }
 
         private fun skalOppretteOppgave(vedtaksperiode: Vedtaksperiode) =
-            vedtaksperiode.inntektsmeldingInfo != null ||
-                vedtaksperiode.arbeidsgiver.finnSammenhengendePeriode(vedtaksperiode.skjæringstidspunkt).any { it.inntektsmeldingInfo != null } ||
-                vedtaksperiode.sykdomstidslinje.any { it.kommerFra(Søknad::class) }
+            vedtaksperiode.hendelseIder.harSøknad() || vedtaksperiode.arbeidsgiver.finnTidligereInntektsmeldinginfo(vedtaksperiode.skjæringstidspunkt) != null
 
         override fun håndter(
             person: Person,

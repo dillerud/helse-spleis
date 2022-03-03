@@ -1108,6 +1108,14 @@ internal class Arbeidsgiver private constructor(
         inntektshistorikk.build(filter, inntektsmeldingId)
     }
 
+    internal fun vedtaksperiodeAvbrutt(aktivitetslogg: IAktivitetslogg, hendelser: Set<Dokumentsporing>, periode: Periode, skjæringstidspunkt: LocalDate, tilstandType: TilstandType) {
+        val dokumenter = hendelser.toMutableSet()
+        finnTidligereInntektsmeldinginfo(skjæringstidspunkt)?.also {
+            it.leggTil(dokumenter)
+        }
+        person.vedtaksperiodeAvbrutt(aktivitetslogg, periode, tilstandType, dokumenter)
+    }
+
     internal class JsonRestorer private constructor() {
         internal companion object {
             internal fun restore(

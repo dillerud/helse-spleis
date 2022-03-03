@@ -259,6 +259,10 @@ internal class PersonMediator(
             "vedtaksperiode_forkastet", JsonMessage.newMessage(
                 mapOf(
                     "tilstand" to event.gjeldendeTilstand,
+                    "harSøknad" to event.harSøknad,
+                    "harInntektsmelding" to event.harInntektsmelding,
+                    "harNærliggendeUtbetaling" to event.harNærliggendeUtbetaling,
+                    "hendelser" to event.hendelser
                 )
             )
         )
