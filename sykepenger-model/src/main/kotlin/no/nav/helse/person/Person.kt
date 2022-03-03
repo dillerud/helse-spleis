@@ -709,13 +709,19 @@ class Person private constructor(
             }
         })
 
+        val søknadsperiode = hendelse.sykdomstidslinje().periode()
+        val harNærliggendeUtbetaling = søknadsperiode?.let { harNærliggendeUtbetaling(it) } ?: false
+        if (harNærliggendeUtbetaling) emitOpprettOppgaveForSpeilsaksbehandlereEvent(hendelse) else emitOpprettOppgaveEvent(hendelse)
+
+        val event = PersonObserver.HendelseIkkeHåndtertEvent(
+            hendelse.meldingsreferanseId(),
+            errorMeldinger,
+            harNærliggendeUtbetaling
+        )
         observers.forEach {
             it.hendelseIkkeHåndtert(
                 hendelse.hendelseskontekst(),
-                PersonObserver.HendelseIkkeHåndtertEvent(
-                    hendelse.meldingsreferanseId(),
-                    errorMeldinger,
-                )
+                event
             )
         }
     }

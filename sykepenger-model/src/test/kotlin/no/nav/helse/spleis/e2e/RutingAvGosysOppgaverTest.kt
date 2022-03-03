@@ -14,6 +14,7 @@ import no.nav.helse.økonomi.Inntekt.Companion.årlig
 import no.nav.helse.økonomi.Prosentdel.Companion.prosent
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
 
@@ -110,7 +111,9 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
 
         val søknadHendelseId = håndterSøknad(Sykdom(20.februar, 1.mars, 80.prosent))
 
-        // TODO: sjekke hendelseIkkeHåndtert også (søknaden)
+        observatør.hendelseIkkeHåndtert(søknadHendelseId).also {
+            assertTrue(it.harNærliggendeUtbetaling)
+        }
         assertTrue(observatør.opprettOppgaveEvent().isEmpty())
         assertTrue(observatør.opprettOppgaveForSpeilsaksbehandlereEvent().any { søknadHendelseId in it.hendelser })
     }
@@ -122,9 +125,15 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
         val imHendelseId = håndterInntektsmelding(listOf(20.februar til 1.mars))
         assertForventetFeil(
             forklaring = "Nært forestående feature - https://trello.com/c/eG2Awz44",
-            nå = { assertTrue(observatør.hendelseIkkeHåndtertEventer.isEmpty()) },
+            nå = {
+                assertTrue(observatør.hendelseIkkeHåndtertEventer.isEmpty())
+                assertThrows<NoSuchElementException> { observatør.hendelseIkkeHåndtert(imHendelseId) }
+             },
             ønsket = {
-                // assertTrue(observatør.<nytt event her>.harRelatertUtbetaling)
+                assertDoesNotThrow { observatør.hendelseIkkeHåndtert(imHendelseId) }
+                observatør.hendelseIkkeHåndtert(imHendelseId).also {
+                    assertTrue(it.harNærliggendeUtbetaling)
+                }
                 assertFalse(observatør.hendelseIkkeHåndtertEventer.isEmpty())
                 assertNotNull(observatør.hendelseIkkeHåndtert(imHendelseId))
             }
@@ -138,13 +147,15 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
         håndterSykmelding(Sykmeldingsperiode(20.februar(2016), 28.februar(2016), 80.prosent))
         val søknadHendelseId = håndterSøknad(Sykdom(20.februar(2016), 28.februar(2016), 80.prosent))
 
-        // TODO: sjekke hendelseIkkeHåndtert også (søknaden)
         observatør.avbrutt(2.vedtaksperiode.id(ORGNUMMER)).also {
             assertFalse(it.harSøknad)
             assertFalse(it.harInntektsmelding)
             assertTrue(it.harNærliggendeUtbetaling)
             assertFalse(søknadHendelseId in it.hendelser)
             assertFalse(inntektsmeldingId in it.hendelser)
+        }
+        observatør.hendelseIkkeHåndtert(søknadHendelseId).also {
+            assertTrue(it.harNærliggendeUtbetaling)
         }
         assertTrue(observatør.opprettOppgaveEvent().isEmpty())
         assertTrue(observatør.opprettOppgaveForSpeilsaksbehandlereEvent().any { søknadHendelseId in it.hendelser })
@@ -158,13 +169,15 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
         håndterSykmelding(Sykmeldingsperiode(20.februar(2014), 28.februar(2014), 80.prosent))
         val søknadHendelseId = håndterSøknad(Sykdom(20.februar(2014), 28.februar(2014), 80.prosent))
 
-        // TODO: sjekke hendelseIkkeHåndtert også (søknaden)
         observatør.avbrutt(2.vedtaksperiode.id(ORGNUMMER)).also {
             assertFalse(it.harSøknad)
             assertFalse(it.harInntektsmelding)
             assertFalse(it.harNærliggendeUtbetaling)
             assertFalse(søknadHendelseId in it.hendelser)
             assertFalse(inntektsmeldingId in it.hendelser)
+        }
+        observatør.hendelseIkkeHåndtert(søknadHendelseId).also {
+            assertFalse(it.harNærliggendeUtbetaling)
         }
         assertTrue(observatør.opprettOppgaveForSpeilsaksbehandlereEvent().isEmpty())
         assertTrue(observatør.opprettOppgaveEvent().any { søknadHendelseId in it.hendelser })
@@ -276,13 +289,23 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
 
         val inntektsmeldingId = håndterInntektsmelding(listOf(1.januar til 16.januar))
 
-        // TODO: sjekke hendelseIkkeHåndtert også (inntektsmeldingen)
         observatør.avbrutt(1.vedtaksperiode.id(ORGNUMMER)).also {
             assertFalse(it.harSøknad)
             assertFalse(it.harInntektsmelding)
             assertFalse(it.harNærliggendeUtbetaling)
             assertFalse(inntektsmeldingId in it.hendelser)
         }
+        assertForventetFeil(
+            nå = {
+                assertThrows<NoSuchElementException> { observatør.hendelseIkkeHåndtert(inntektsmeldingId) }
+            },
+            ønsket = {
+                assertDoesNotThrow { observatør.hendelseIkkeHåndtert(inntektsmeldingId) }
+                observatør.hendelseIkkeHåndtert(inntektsmeldingId).also {
+                    assertTrue(it.harNærliggendeUtbetaling)
+                }
+            }
+        )
         assertTrue(observatør.opprettOppgaveEvent().any { inntektsmeldingId in it.hendelser })
     }
 
@@ -467,6 +490,9 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
             assertFalse(it.harNærliggendeUtbetaling)
             assertFalse(søknadId in it.hendelser)
             assertTrue(inntektsmeldingId in it.hendelser)
+        }
+        observatør.hendelseIkkeHåndtert(søknadId).also {
+            assertFalse(it.harNærliggendeUtbetaling)
         }
         assertTrue(observatør.opprettOppgaveEvent().any { søknadId in it.hendelser })
         assertFalse(observatør.opprettOppgaveForSpeilsaksbehandlereEvent().any { søknadId in it.hendelser })

@@ -203,6 +203,7 @@ interface PersonObserver {
     data class HendelseIkkeHåndtertEvent(
         val hendelseId: UUID,
         val årsaker: List<String>,
+        val harNærliggendeUtbetaling: Boolean
     )
 
     data class VedtakFattetEvent(

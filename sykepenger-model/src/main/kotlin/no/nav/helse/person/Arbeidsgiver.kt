@@ -439,12 +439,7 @@ internal class Arbeidsgiver private constructor(
             søknad.warn("Det er oppgitt ny informasjon om ferie i søknaden som det ikke har blitt opplyst om tidligere. Tidligere periode må revurderes.")
         }
         noenHarHåndtert(søknad, Vedtaksperiode::håndter, "Forventet ikke ${søknad.kilde}. Har nok ikke mottatt sykmelding")
-        if (søknad.hasErrorsOrWorse()) {
-            val søknadsperiode = søknad.sykdomstidslinje().periode()
-            val harNærliggendeUtbetaling = søknadsperiode?.let { person.harNærliggendeUtbetaling(it) } ?: false
-            if (harNærliggendeUtbetaling) person.emitOpprettOppgaveForSpeilsaksbehandlereEvent(søknad) else person.emitOpprettOppgaveEvent(søknad)
-            person.emitHendelseIkkeHåndtert(søknad)
-        }
+        if (søknad.hasErrorsOrWorse()) person.emitHendelseIkkeHåndtert(søknad)
     }
 
     internal fun harRefusjonOpphørt(periodeTom: LocalDate): Boolean {

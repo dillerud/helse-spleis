@@ -396,7 +396,8 @@ internal class PersonMediator(
         queueMessage(hendelseskontekst, "hendelse_ikke_håndtert", JsonMessage.newMessage(
             mapOf(
                 "hendelseId" to event.hendelseId,
-                "årsaker" to event.årsaker
+                "årsaker" to event.årsaker,
+                "harNærliggendeUtbetaling" to event.harNærliggendeUtbetaling
             )
         ))
     }
