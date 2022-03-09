@@ -226,6 +226,25 @@ internal class RutingAvGosysOppgaverTest : AbstractEndToEndTest() {
     }
 
     @Test
+    fun `annullerte perioder`() {
+        nyttVedtak(1.januar, 31.januar)
+        forlengVedtak(1.februar, 28.februar)
+        håndterAnnullerUtbetaling()
+        observatør.avbrutt(1.vedtaksperiode.id(ORGNUMMER)).also {
+            assertTrue(it.harSøknad)
+            assertTrue(it.harInntektsmelding)
+            assertFalse(it.harNærliggendeUtbetaling)
+        }
+        observatør.avbrutt(2.vedtaksperiode.id(ORGNUMMER)).also {
+            assertTrue(it.harSøknad)
+            assertTrue(it.harInntektsmelding)
+            assertFalse(it.harNærliggendeUtbetaling)
+        }
+        assertTrue(observatør.opprettOppgaveForSpeilsaksbehandlereEvent().isEmpty())
+        assertTrue(observatør.opprettOppgaveEvent().isEmpty())
+    }
+
+    @Test
     fun `søknad som kommer inn i etterkant av en annullert utbetaling skal til vanlig kø`() {
         nyttVedtak(1.mars, 31.mars)
         val inntektsmeldingId = inntektsmeldinger.keys.first()
