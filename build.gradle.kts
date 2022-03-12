@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.6.20-M1"
 }
 
 val flywayVersion = "8.0.2"
@@ -50,10 +50,14 @@ allprojects {
     tasks {
         compileKotlin {
             kotlinOptions.jvmTarget = "17"
+            kotlinOptions.useFir = true
+            kotlinOptions.freeCompilerArgs += "-Xbackend-threads=0"
         }
 
         compileTestKotlin {
             kotlinOptions.jvmTarget = "17"
+            kotlinOptions.useFir = true
+            kotlinOptions.freeCompilerArgs += "-Xbackend-threads=0"
         }
 
         withType<Wrapper> {

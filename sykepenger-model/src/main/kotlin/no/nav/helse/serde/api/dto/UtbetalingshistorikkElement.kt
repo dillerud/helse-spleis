@@ -25,7 +25,7 @@ data class UtbetalingshistorikkElementDTO(
 ) {
     val beregningId = utbetaling.beregningId
 
-    data class UtbetalingDTO internal constructor(
+    data class UtbetalingDTO constructor(
         val utbetalingId: UUID,
         val korrelasjonsId: UUID,
         val utbetalingstidslinje: List<UtbetalingstidslinjedagDTO>,

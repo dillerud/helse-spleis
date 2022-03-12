@@ -34,7 +34,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 // Understands related payment activities for an Arbeidsgiver
-internal class Utbetaling private constructor(
+class Utbetaling private constructor(
     private val id: UUID,
     private val korrelasjonsId: UUID,
     private val beregningId: UUID,

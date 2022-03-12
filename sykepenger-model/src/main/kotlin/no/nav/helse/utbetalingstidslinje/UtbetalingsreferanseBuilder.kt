@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import java.util.*
 
 private const val pad = '='
-private const val padByte = pad.code.toByte()
+private val padByte = pad.code.toByte()
 
 internal fun genererUtbetalingsreferanse(uuid: UUID): String {
     return uuid.base32Encode()
