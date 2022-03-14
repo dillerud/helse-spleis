@@ -1,8 +1,11 @@
 package no.nav.helse.hendelser
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.util.*
 import no.nav.helse.person.Arbeidsgiver
-import no.nav.helse.person.IAktivitetslogg
 import no.nav.helse.person.Dokumentsporing
+import no.nav.helse.person.IAktivitetslogg
 import no.nav.helse.person.etterlevelse.SubsumsjonObserver
 import no.nav.helse.somFødselsnummer
 import no.nav.helse.sykdomstidslinje.Dag
@@ -12,9 +15,6 @@ import no.nav.helse.sykdomstidslinje.merge
 import no.nav.helse.tournament.Dagturnering
 import no.nav.helse.utbetalingstidslinje.Alder
 import no.nav.helse.økonomi.Prosentdel
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.*
 
 class Søknad(
     meldingsreferanseId: UUID,
@@ -51,11 +51,6 @@ class Søknad(
     }
 
     override fun sykdomstidslinje() = sykdomstidslinje
-
-    override fun validerIkkeOppgittFlereArbeidsforholdMedSykmelding(): IAktivitetslogg {
-        andreInntektskilder.forEach { it.validerIkkeSykmeldt(this) }
-        return this
-    }
 
     // registrerer feriedager i forkant av sykmeldingsperioden i søknaden som vi ikke ønsker å beholde
     // kan fjernes når søkere ikke lenger har anledning til å oppgi slik informasjon
@@ -222,13 +217,12 @@ class Søknad(
         fun valider(aktivitetslogg: IAktivitetslogg) {
             if (type == "ANNET") {
                 aktivitetslogg.warn("Det er oppgitt annen inntektskilde i søknaden. Vurder inntekt.")
-            } else if (type != "ANDRE_ARBEIDSFORHOLD") {
+            } else if (type == "ANDRE_ARBEIDSFORHOLD") {
+                // TODO: ta stilling til $sykmeldt ?
+                aktivitetslogg.warn("Den sykmeldte har i søknaden oppgitt at de er sykmeldt fra et annet arbeidsforhold")
+            } else {
                 aktivitetslogg.error("Søknaden inneholder andre inntektskilder enn ANDRE_ARBEIDSFORHOLD")
             }
-        }
-
-        fun validerIkkeSykmeldt(aktivitetslogg: IAktivitetslogg) {
-            if (sykmeldt) aktivitetslogg.error("Søknaden inneholder ANDRE_ARBEIDSFORHOLD med sykdom, men vi kjenner kun til sykdom ved ett arbeidsforhold")
         }
     }
 }
