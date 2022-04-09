@@ -1052,7 +1052,7 @@ internal class Arbeidsgiver private constructor(
         sykdomshistorikk.sykdomstidslinje().lås(periode)
     }
 
-    private fun låsOpp(periode: Periode) {
+    internal fun låsOpp(periode: Periode) {
         sykdomshistorikk.sykdomstidslinje().låsOpp(periode)
     }
 

@@ -312,7 +312,7 @@ private fun TilstandType.tilPeriodetilstand(utbetaling: Utbetaling, tidslinje: L
         TilstandType.AVVENTER_ARBEIDSGIVERE_REVURDERING,
         TilstandType.AVVENTER_VILKÅRSPRØVING_REVURDERING,
         TilstandType.AVVENTER_HISTORIKK_REVURDERING,
-        TilstandType.AVVENTER_TIDLIGERE_REVURDERING,
+        TilstandType.AVVENTER_ANNEN_REVURDERING,
         TilstandType.AVVENTER_INNTEKTSMELDING_UFERDIG_FORLENGELSE,
         TilstandType.AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK,
         TilstandType.AVVENTER_HISTORIKK -> Periodetilstand.Venter

@@ -56,6 +56,7 @@ import no.nav.helse.person.Periodetype.INFOTRYGDFORLENGELSE
 import no.nav.helse.person.Periodetype.OVERGANG_FRA_IT
 import no.nav.helse.person.TilstandType.AVSLUTTET
 import no.nav.helse.person.TilstandType.AVSLUTTET_UTEN_UTBETALING
+import no.nav.helse.person.TilstandType.AVVENTER_ANNEN_REVURDERING
 import no.nav.helse.person.TilstandType.AVVENTER_ARBEIDSGIVERE
 import no.nav.helse.person.TilstandType.AVVENTER_ARBEIDSGIVERE_REVURDERING
 import no.nav.helse.person.TilstandType.AVVENTER_GJENNOMFØRT_REVURDERING
@@ -75,7 +76,6 @@ import no.nav.helse.person.TilstandType.AVVENTER_SØKNAD_FERDIG_GAP
 import no.nav.helse.person.TilstandType.AVVENTER_SØKNAD_UFERDIG_FORLENGELSE
 import no.nav.helse.person.TilstandType.AVVENTER_SØKNAD_UFERDIG_GAP
 import no.nav.helse.person.TilstandType.AVVENTER_TIDLIGERE_ELLER_OVERLAPPENDE_PERIODER
-import no.nav.helse.person.TilstandType.AVVENTER_TIDLIGERE_REVURDERING
 import no.nav.helse.person.TilstandType.AVVENTER_UFERDIG
 import no.nav.helse.person.TilstandType.AVVENTER_VILKÅRSPRØVING
 import no.nav.helse.person.TilstandType.AVVENTER_VILKÅRSPRØVING_REVURDERING
@@ -1377,8 +1377,8 @@ internal class Vedtaksperiode private constructor(
         }
     }
 
-    internal object AvventerTidligereRevurdering : Vedtaksperiodetilstand {
-        override val type = AVVENTER_TIDLIGERE_REVURDERING
+    internal object AvventerAnnenRevurdering : Vedtaksperiodetilstand {
+        override val type = AVVENTER_ANNEN_REVURDERING
 
         override fun makstid(vedtaksperiode: Vedtaksperiode, tilstandsendringstidspunkt: LocalDateTime): LocalDateTime = LocalDateTime.MAX
 
@@ -1468,9 +1468,7 @@ internal class Vedtaksperiode private constructor(
             aktivRevurdering: Vedtaksperiode,
             nyRevurdering: Vedtaksperiode
         ) {
-            if (vedtaksperiode.skjæringstidspunkt == nyRevurdering.skjæringstidspunkt) return vedtaksperiode.tilstand(hendelse, AvventerGjennomførtRevurdering) // perioden omfattes an ny revurdering, og perioden _er_ i en aktiv revurdering
-            if (aktivRevurdering < nyRevurdering) return // den nye revurderingen er en senere periode
-            return vedtaksperiode.tilstand(hendelse, AvventerTidligereRevurdering) // den nye revurderingen er en tidligere periode, vi må avvente
+            vedtaksperiode.fortsettEllerAvventRevurdering(hendelse, aktivRevurdering, nyRevurdering)
         }
     }
 
@@ -1545,9 +1543,7 @@ internal class Vedtaksperiode private constructor(
             aktivRevurdering: Vedtaksperiode,
             nyRevurdering: Vedtaksperiode
         ) {
-            if (vedtaksperiode.skjæringstidspunkt == nyRevurdering.skjæringstidspunkt) return vedtaksperiode.tilstand(hendelse, AvventerGjennomførtRevurdering) // perioden omfattes an ny revurdering, og perioden _er_ i en aktiv revurdering
-            if (aktivRevurdering < nyRevurdering) return // den nye revurderingen er en senere periode
-            return vedtaksperiode.tilstand(hendelse, AvventerTidligereRevurdering) // den nye revurderingen er en tidligere periode, vi må avvente
+            vedtaksperiode.fortsettEllerAvventRevurdering(hendelse, aktivRevurdering, nyRevurdering)
         }
 
         /*
@@ -2246,6 +2242,15 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.tilstand(simulering, AvventerGodkjenningRevurdering)
         }
 
+        override fun iverksettRevurdering(
+            vedtaksperiode: Vedtaksperiode,
+            hendelse: IAktivitetslogg,
+            aktivRevurdering: Vedtaksperiode,
+            nyRevurdering: Vedtaksperiode
+        ) {
+            vedtaksperiode.fortsettEllerAvventRevurdering(hendelse, aktivRevurdering, nyRevurdering)
+        }
+
         override fun håndterTidligereTilstøtendeUferdigPeriode(vedtaksperiode: Vedtaksperiode, tidligere: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerArbeidsgivereRevurdering)
         }
@@ -2399,6 +2404,18 @@ internal class Vedtaksperiode private constructor(
         tilstand.iverksettRevurdering(this, hendelse, aktivRevurdering, nyRevurdering)
     }
 
+    private fun fortsettEllerAvventRevurdering(hendelse: IAktivitetslogg, aktivRevurdering: Vedtaksperiode, nyRevurdering: Vedtaksperiode) {
+        if (this.skjæringstidspunkt == nyRevurdering.skjæringstidspunkt) return tilstand(hendelse, AvventerGjennomførtRevurdering) // perioden omfattes an ny revurdering, og perioden _er_ i en aktiv revurdering
+        if (aktivRevurdering < nyRevurdering || utbetalinger.utbetales()) return // den nye revurderingen er en senere periode, eller vi er midt i en utbetalingsprosess
+        return tilstand(hendelse, AvventerAnnenRevurdering) // den nye revurderingen er en tidligere periode, vi må avvente
+    }
+
+    private fun startEllerAvventRevurdering(hendelse: IAktivitetslogg, aktivRevurdering: Vedtaksperiode, nyRevurdering: Vedtaksperiode) {
+        if (this.skjæringstidspunkt != nyRevurdering.skjæringstidspunkt) return // perioden omfattes ikke av ny revurdering
+        if (nyRevurdering > aktivRevurdering || aktivRevurdering.utbetalinger.utbetales()) return tilstand(hendelse, AvventerAnnenRevurdering) // perioden omfattes an ny revurdering, men aktiv revurdering er en tidligere periode
+        tilstand(hendelse, AvventerGjennomførtRevurdering)
+    }
+
     internal object AvventerGodkjenningRevurdering : Vedtaksperiodetilstand {
         override val type = AVVENTER_GODKJENNING_REVURDERING
         override val kanReberegnes = false
@@ -2437,9 +2454,7 @@ internal class Vedtaksperiode private constructor(
             aktivRevurdering: Vedtaksperiode,
             nyRevurdering: Vedtaksperiode
         ) {
-            if (vedtaksperiode.skjæringstidspunkt == nyRevurdering.skjæringstidspunkt) return vedtaksperiode.tilstand(hendelse, AvventerGjennomførtRevurdering) // perioden omfattes an ny revurdering, og perioden _er_ i en aktiv revurdering
-            if (aktivRevurdering < nyRevurdering) return // den nye revurderingen er en senere periode
-            return vedtaksperiode.tilstand(hendelse, AvventerTidligereRevurdering) // den nye revurderingen er en tidligere periode, vi må avvente
+            vedtaksperiode.fortsettEllerAvventRevurdering(hendelse, aktivRevurdering, nyRevurdering)
         }
 
         override fun håndterTidligereTilstøtendeUferdigPeriode(vedtaksperiode: Vedtaksperiode, tidligere: Vedtaksperiode, hendelse: IAktivitetslogg) {
@@ -2543,6 +2558,15 @@ internal class Vedtaksperiode private constructor(
                 vedtaksperiode.utbetalinger.erUtbetalt() -> vedtaksperiode.tilstand(påminnelse, Avsluttet)
                 vedtaksperiode.utbetalinger.harFeilet() -> vedtaksperiode.tilstand(påminnelse, UtbetalingFeilet)
             }
+        }
+
+        override fun iverksettRevurdering(
+            vedtaksperiode: Vedtaksperiode,
+            hendelse: IAktivitetslogg,
+            aktivRevurdering: Vedtaksperiode,
+            nyRevurdering: Vedtaksperiode
+        ) {
+            super.iverksettRevurdering(vedtaksperiode, hendelse, aktivRevurdering, nyRevurdering)
         }
     }
 
@@ -2736,14 +2760,14 @@ internal class Vedtaksperiode private constructor(
             aktivRevurdering: Vedtaksperiode,
             nyRevurdering: Vedtaksperiode
         ) {
-            if (vedtaksperiode.skjæringstidspunkt != nyRevurdering.skjæringstidspunkt) return // perioden omfattes ikke av ny revurdering
-            if (nyRevurdering > aktivRevurdering) return vedtaksperiode.tilstand(hendelse, AvventerTidligereRevurdering) // perioden omfattes an ny revurdering, men aktiv revurdering er en tidligere periode
-            vedtaksperiode.tilstand(hendelse, AvventerGjennomførtRevurdering)
+            vedtaksperiode.startEllerAvventRevurdering(hendelse, aktivRevurdering, nyRevurdering)
         }
 
         override fun håndter(vedtaksperiode: Vedtaksperiode, hendelse: OverstyrTidslinje) {
             if (Toggle.NyRevurdering.disabled) return vedtaksperiode.person.igangsettRevurdering(hendelse, vedtaksperiode)
-            vedtaksperiode.oppdaterHistorikk(hendelse) // TODO: vente med å gjøre dette til signalet `iverksettRevuedering()` går ut??
+            vedtaksperiode.arbeidsgiver.låsOpp(vedtaksperiode.periode)
+            vedtaksperiode.oppdaterHistorikk(hendelse)
+            vedtaksperiode.arbeidsgiver.lås(vedtaksperiode.periode)
             vedtaksperiode.person.iverksettRevurdering(vedtaksperiode, hendelse)
         }
 

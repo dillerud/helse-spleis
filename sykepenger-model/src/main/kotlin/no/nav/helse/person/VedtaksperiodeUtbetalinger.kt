@@ -31,6 +31,7 @@ internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver
     private fun erSiste(other: Utbetaling) = siste == other
     internal fun erSiste(other: VedtaksperiodeUtbetalinger) = erSiste(other.siste!!)
 
+    internal fun utbetales() = siste?.utbetales() == true
     internal fun erAvsluttet() = siste?.erAvsluttet() == true
     internal fun erAvvist() = siste?.erAvvist() == true
     internal fun harUtbetalinger() = siste?.harUtbetalinger() == true
