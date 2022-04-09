@@ -527,10 +527,6 @@ internal class Utbetaling private constructor(
         tilstand(nesteTilstand, hendelse)
     }
 
-    internal fun overlapperMed(other: Utbetaling): Boolean {
-        return this.periode.overlapperMed(other.periode)
-    }
-
     internal fun erEldreEnn(other: LocalDateTime): Boolean {
         return other > tidsstempel
     }

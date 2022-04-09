@@ -961,7 +961,7 @@ internal data class PersonData(
                 TilstandType.AVVENTER_TIDLIGERE_ELLER_OVERLAPPENDE_PERIODER -> Vedtaksperiode.AvventerTidligereEllerOverlappendePerioder
                 TilstandType.AVVENTER_UFERDIG -> Vedtaksperiode.AvventerUferdig
                 TilstandType.AVVENTER_ARBEIDSGIVERE -> Vedtaksperiode.AvventerArbeidsgivere
-                TilstandType.AVVENTER_REVURDERING -> Vedtaksperiode.AvventerRevurdering
+                TilstandType.AVVENTER_TIDLIGERE_REVURDERING -> Vedtaksperiode.AvventerTidligereRevurdering
                 TilstandType.AVVENTER_HISTORIKK_REVURDERING -> Vedtaksperiode.AvventerHistorikkRevurdering
                 TilstandType.AVVENTER_VILKÅRSPRØVING_REVURDERING -> Vedtaksperiode.AvventerVilkårsprøvingRevurdering
                 TilstandType.AVVENTER_SIMULERING_REVURDERING -> Vedtaksperiode.AvventerSimuleringRevurdering

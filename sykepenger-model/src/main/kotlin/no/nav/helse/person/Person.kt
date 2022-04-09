@@ -48,6 +48,7 @@ import no.nav.helse.person.Arbeidsgiver.Companion.harOverlappendeVedtaksperiode
 import no.nav.helse.person.Arbeidsgiver.Companion.harUtbetaltPeriode
 import no.nav.helse.person.Arbeidsgiver.Companion.harVedtaksperiodeFor
 import no.nav.helse.person.Arbeidsgiver.Companion.håndter
+import no.nav.helse.person.Arbeidsgiver.Companion.iverksettRevurdering
 import no.nav.helse.person.Arbeidsgiver.Companion.kanOverstyreTidslinje
 import no.nav.helse.person.Arbeidsgiver.Companion.minstEttSykepengegrunnlagSomIkkeKommerFraSkatt
 import no.nav.helse.person.Arbeidsgiver.Companion.nåværendeVedtaksperioder
@@ -291,8 +292,10 @@ class Person private constructor(
         check(Toggle.NyRevurdering.enabled)
         hendelse.kontekst(this)
         finnArbeidsgiver(hendelse).håndter(hendelse)
-        arbeidsgivere.forEach { it.iverksettRevurdering(hendelse) }
-        hendelse.iverksettRevurdering()
+    }
+
+    internal fun iverksettRevurdering(vedtaksperiode: Vedtaksperiode, hendelse: IAktivitetslogg) {
+        arbeidsgivere.iverksettRevurdering(vedtaksperiode, hendelse)
     }
 
     fun håndter(hendelse: OverstyrInntekt) {

@@ -72,7 +72,7 @@ internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver
         }
     }
 
-    internal fun lagRevurdering(fødselsnummer: String, periode: Periode, maksimumSykepenger: Alder.MaksimumSykepenger, hendelse: ArbeidstakerHendelse): Utbetalingstidslinje {
+    internal fun lagRevurdering(vedtaksperiode: Vedtaksperiode, fødselsnummer: String, periode: Periode, maksimumSykepenger: Alder.MaksimumSykepenger, hendelse: ArbeidstakerHendelse): Utbetalingstidslinje {
         return nyUtbetaling(hendelse, periode) {
             arbeidsgiver.lagRevurdering(
                 aktivitetslogg = hendelse,
@@ -82,7 +82,7 @@ internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver
                 gjenståendeSykedager = maksimumSykepenger.gjenståendeDager(),
                 periode = periode,
                 forrige = utbetalinger
-            ).also { arbeidsgiver.fordelRevurdertUtbetaling(hendelse, it) }
+            ).also { arbeidsgiver.fordelRevurdertUtbetaling(vedtaksperiode, hendelse, it) }
         }
     }
 
@@ -99,10 +99,6 @@ internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver
         builder.utbetaling(siste!!)
     }
 
-    internal fun overlapperMed(other: VedtaksperiodeUtbetalinger): Boolean {
-        if (!this.harUtbetalinger() || !other.harUtbetalinger()) return false
-        return this.siste!!.overlapperMed(other.siste!!)
-    }
     internal fun valider(simulering: Simulering) = siste!!.valider(simulering)
     internal fun erKlarForGodkjenning() = siste!!.erKlarForGodkjenning()
 

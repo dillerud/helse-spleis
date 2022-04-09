@@ -134,6 +134,10 @@ internal class Arbeidsgiver private constructor(
             }
         }
 
+        internal fun List<Arbeidsgiver>.iverksettRevurdering(vedtaksperiode: Vedtaksperiode, hendelse: IAktivitetslogg) {
+            Vedtaksperiode.iverksettRevurdering(hendelse, vedtaksperiode, associateWith { it.vedtaksperioder })
+        }
+
         internal fun List<Arbeidsgiver>.harPeriodeSomBlokkererOverstyrArbeidsforhold(skjæringstidspunkt: LocalDate) = any { arbeidsgiver ->
             arbeidsgiver.vedtaksperioder
                 .filter { vedtaksperiode -> vedtaksperiode.gjelder(skjæringstidspunkt) }
@@ -322,7 +326,7 @@ internal class Arbeidsgiver private constructor(
     }
 
     internal fun gjenopptaRevurdering(første: Vedtaksperiode, hendelse: IAktivitetslogg) {
-        Vedtaksperiode.iverksettRevurdering(hendelse, vedtaksperioder, første)
+        // Vedtaksperiode.iverksettRevurdering(hendelse, vedtaksperioder, første)
     }
 
     internal fun accept(visitor: ArbeidsgiverVisitor) {
@@ -823,8 +827,8 @@ internal class Arbeidsgiver private constructor(
         håndter(hendelse, Vedtaksperiode::håndter)
     }
 
-    internal fun iverksettRevurdering(hendelse: OverstyrTidslinje) {
-        håndter(hendelse) { this.iverksettRevurdering(hendelse) }
+    internal fun gjennopptaRevurdering(hendelse: IAktivitetslogg, nyRevurdering: Vedtaksperiode) {
+        Vedtaksperiode.gjennopptaRevurdering(hendelse, this, nyRevurdering, vedtaksperioder)
     }
 
     internal fun håndter(hendelse: OverstyrInntekt) {
@@ -1036,8 +1040,8 @@ internal class Arbeidsgiver private constructor(
 
     internal fun alleAndrePerioderErKlare(vedtaksperiode: Vedtaksperiode) = vedtaksperioder.filterNot { it == vedtaksperiode }.none(IKKE_FERDIG_REVURDERT)
 
-    internal fun fordelRevurdertUtbetaling(hendelse: ArbeidstakerHendelse, utbetaling: Utbetaling) {
-        håndter(hendelse) { håndterRevurdertUtbetaling(utbetaling, hendelse) }
+    internal fun fordelRevurdertUtbetaling(vedtaksperiode: Vedtaksperiode, hendelse: ArbeidstakerHendelse, utbetaling: Utbetaling) {
+        håndter(hendelse) { håndterRevurdertUtbetaling(vedtaksperiode, utbetaling, hendelse) }
     }
 
     override fun toSpesifikkKontekst(): SpesifikkKontekst {

@@ -133,7 +133,7 @@ data class UtbetalingshistorikkElementDTO(
                     TilstandType.AVVENTER_ARBEIDSGIVERE_REVURDERING,
                     TilstandType.AVVENTER_VILKÅRSPRØVING_REVURDERING,
                     TilstandType.AVVENTER_HISTORIKK_REVURDERING,
-                    TilstandType.AVVENTER_REVURDERING,
+                    TilstandType.AVVENTER_TIDLIGERE_REVURDERING,
                     TilstandType.AVVENTER_INNTEKTSMELDING_UFERDIG_FORLENGELSE,
                     TilstandType.AVVENTER_HISTORIKK -> TilstandstypeDTO.Venter
                     TilstandType.AVVENTER_UFERDIG,
