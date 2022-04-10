@@ -1396,6 +1396,12 @@ internal class Vedtaksperiode private constructor(
             if (vedtaksperiode.skjæringstidspunkt != nyRevurdering.skjæringstidspunkt) return
             return vedtaksperiode.tilstand(hendelse, AvventerGjennomførtRevurdering) // perioden omfattes an ny revurdering, og perioden _er_ i en aktiv revurdering
         }
+
+        override fun håndter(vedtaksperiode: Vedtaksperiode, hendelse: OverstyrTidslinje) {
+            vedtaksperiode.arbeidsgiver.låsOpp(vedtaksperiode.periode)
+            vedtaksperiode.oppdaterHistorikk(hendelse)
+            vedtaksperiode.arbeidsgiver.lås(vedtaksperiode.periode)
+        }
     }
 
     internal object AvventerGjennomførtRevurdering : Vedtaksperiodetilstand {
@@ -2411,7 +2417,7 @@ internal class Vedtaksperiode private constructor(
     }
 
     private fun startEllerAvventRevurdering(hendelse: IAktivitetslogg, aktivRevurdering: Vedtaksperiode, nyRevurdering: Vedtaksperiode) {
-        if (this.skjæringstidspunkt != nyRevurdering.skjæringstidspunkt) return // perioden omfattes ikke av ny revurdering
+        if (nyRevurdering < this && this.skjæringstidspunkt != nyRevurdering.skjæringstidspunkt) return tilstand(hendelse, AvventerAnnenRevurdering) // perioden omfattes ikke av ny revurdering
         if (nyRevurdering > aktivRevurdering || aktivRevurdering.utbetalinger.utbetales()) return tilstand(hendelse, AvventerAnnenRevurdering) // perioden omfattes an ny revurdering, men aktiv revurdering er en tidligere periode
         tilstand(hendelse, AvventerGjennomførtRevurdering)
     }
