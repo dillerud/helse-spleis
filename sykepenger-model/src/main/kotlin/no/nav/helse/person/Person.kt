@@ -104,13 +104,23 @@ class Person private constructor(
 
     private val observers = mutableListOf<PersonObserver>()
 
+    private fun gjenopptaBehandlingEtter(hendelse: IAktivitetslogg, block:() -> Unit) {
+        block()
+        if (Toggle.NyTilstandsflyt.disabled) return
+        gjenopptaBehandlingNy(hendelse)
+    }
+
     fun håndter(sykmelding: Sykmelding) = håndter(sykmelding, "sykmelding")
 
-    fun håndter(søknad: Søknad) = håndter(søknad, "søknad")
+    fun håndter(søknad: Søknad) = gjenopptaBehandlingEtter(søknad) {
+        håndter(søknad, "søknad")
+    }
 
-    fun håndter(inntektsmelding: Inntektsmelding) = håndter(inntektsmelding, "inntektsmelding")
+    fun håndter(inntektsmelding: Inntektsmelding) = gjenopptaBehandlingEtter(inntektsmelding) {
+        håndter(inntektsmelding, "inntektsmelding")
+    }
 
-    fun håndter(inntektsmelding: InntektsmeldingReplay) {
+    fun håndter(inntektsmelding: InntektsmeldingReplay) = gjenopptaBehandlingEtter(inntektsmelding) {
         registrer(inntektsmelding, "Behandler replay av inntektsmelding")
         finnArbeidsgiver(inntektsmelding).håndter(inntektsmelding)
     }
@@ -124,11 +134,11 @@ class Person private constructor(
         hendelse.fortsettÅBehandle(arbeidsgiver)
     }
 
-    fun håndter(infotrygdendring: Infotrygdendring) {
+    fun håndter(infotrygdendring: Infotrygdendring) = gjenopptaBehandlingEtter(infotrygdendring) {
         infotrygdendring.kontekst(this)
     }
 
-    fun håndter(utbetalingshistorikk: Utbetalingshistorikk) {
+    fun håndter(utbetalingshistorikk: Utbetalingshistorikk) = gjenopptaBehandlingEtter(utbetalingshistorikk) {
         utbetalingshistorikk.kontekst(this)
         utbetalingshistorikk.oppdaterHistorikk(infotrygdhistorikk)
         finnArbeidsgiver(utbetalingshistorikk).håndter(utbetalingshistorikk, infotrygdhistorikk)

@@ -2203,7 +2203,7 @@ internal class Vedtaksperiode private constructor(
         override val type: TilstandType = AVVENTER_BLOKKERENDE_PERIODE
 
         override fun entering(vedtaksperiode: Vedtaksperiode, hendelse: IAktivitetslogg) {
-            vedtaksperiode.person.gjenopptaBehandlingNy(hendelse)
+            require(Toggle.NyTilstandsflyt.enabled) { "Skal ikke bruke tilstanden AvventerTidligereEllerOverlappendePerioder uten ny flyt" }
         }
 
         override fun håndter(vedtaksperiode: Vedtaksperiode, søknad: Søknad) {
@@ -3068,7 +3068,7 @@ internal class Vedtaksperiode private constructor(
                     )
                     AvsluttetUtenUtbetaling
                 } else {
-                    if (Toggle.GjenopptaAvsluttetUtenUtbetaling.disabled) return@håndterInntektsmelding AvsluttetUtenUtbetaling
+                    if (Toggle.GjenopptaAvsluttetUtenUtbetaling.av()) return@håndterInntektsmelding AvsluttetUtenUtbetaling
                     vedtaksperiode.arbeidsgiver.tidligerePeriodeRebehandles(vedtaksperiode, inntektsmelding)
                     vedtaksperiode.kontekst(inntektsmelding)
                     AvventerBlokkerendePeriode

@@ -125,7 +125,10 @@ abstract class Toggle internal constructor(enabled: Boolean = false, private val
     object GraphQLPlayground : Toggle("GraphQLPlayground", false)
     object SendFeriepengeOppdrag : Toggle(false)
     object RevurdereInntektMedFlereArbeidsgivere : Toggle(false)
-    object GjenopptaAvsluttetUtenUtbetaling : Toggle(false)
+    object GjenopptaAvsluttetUtenUtbetaling : Toggle(false) {
+        private fun på() = enabled && NyTilstandsflyt.enabled
+        internal fun av() = !på()
+    }
     object ForkastForlengelseAvForkastetPeriode : Toggle(false)
     object NyTilstandsflyt : Toggle("NY_TILSTANDSFLYT",false)
     object NyRevurdering : Toggle(false)
