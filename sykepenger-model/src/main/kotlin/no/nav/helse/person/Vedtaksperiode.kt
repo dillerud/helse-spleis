@@ -374,6 +374,7 @@ internal class Vedtaksperiode private constructor(
         kontekst(hendelse)
         håndterer(tilstand, this, ny, hendelse)
         if (hendelse.hasErrorsOrWorse()) return
+        if (Toggle.NyTilstandsflyt.enabled) return
         if (ny.erVedtaksperiodeRettFør(this)) return tilstand.håndterTidligereTilstøtendeUferdigPeriode(
             this,
             ny,
@@ -2885,6 +2886,7 @@ internal class Vedtaksperiode private constructor(
             hendelse.error("Blokkerer revurdering fordi periode er i TilUtbetaling")
         }
 
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {}
         override fun håndter(vedtaksperiode: Vedtaksperiode, hendelse: OverstyrTidslinje) {
             hendelse.info("Overstyrer ikke en vedtaksperiode som har gått til utbetaling")
         }
@@ -3191,6 +3193,10 @@ internal class Vedtaksperiode private constructor(
             hendelse: IAktivitetslogg
         ) {
             if (Toggle.RevurdereOutOfOrder.disabled) return vedtaksperiode.tilstand(hendelse, AvventerArbeidsgivereRevurdering)
+            vedtaksperiode.tilstand(hendelse, AvventerRevurdering)
+        }
+
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerRevurdering)
         }
 
