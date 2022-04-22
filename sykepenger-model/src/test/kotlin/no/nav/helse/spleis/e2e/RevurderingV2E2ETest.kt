@@ -69,15 +69,7 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
         håndterUtbetalt()
 
         assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING, AVVENTER_SIMULERING_REVURDERING, AVVENTER_GODKJENNING_REVURDERING, TIL_UTBETALING, AVSLUTTET)
-        assertForventetFeil(
-            forklaring = "avventer uferdig støtter ikke gjenopptaBehandlingNy og ny tilstandsflyt forventer å bruke avventer tidligere eller overlappende perioder istedenfor avventer uferdig",
-            nå = {
-                assertTilstander(2.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_UFERDIG, AVVENTER_HISTORIKK)
-            },
-            ønsket = {
-                assertTilstander(2.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_BLOKKERENDE_PERIODE, AVVENTER_HISTORIKK)
-            }
-        )
+        assertTilstander(2.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_BLOKKERENDE_PERIODE, AVVENTER_HISTORIKK)
     }
 
     @Test
@@ -279,7 +271,7 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
             assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING)
             assertTilstander(2.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
             assertForventetFeil(
-                forklaring = "Vi vet ikke hva ønsket oppførsel egentlig bør være",
+                forklaring = "Forventer at korte perioder avventer til ting før den er ferdig behandlet",
                 nå = {
                     assertTilstander(3.vedtaksperiode, START, AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK, AVSLUTTET_UTEN_UTBETALING)
                 },
@@ -288,6 +280,30 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
                 }
             )
         }
+    }
+
+    @Test
+    fun `periode med forlengelse etterfulgt av kort periode - kort periode avsluttes ikke før revurdering er ferdig`() {
+        nyttVedtak(1.januar, 31.januar)
+        forlengVedtak(1.februar, 28.februar)
+
+        nullstillTilstandsendringer()
+        håndterOverstyrTidslinje(listOf(ManuellOverskrivingDag(17.januar, Feriedag)))
+
+        håndterSykmelding(Sykmeldingsperiode(1.april, 16.april, 100.prosent))
+        håndterSøknad(Søknad.Søknadsperiode.Sykdom(1.april, 16.april, 100.prosent))
+
+        assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING)
+        assertTilstander(2.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
+        assertForventetFeil(
+            forklaring = "Forventer at korte perioder avventer til ting før den er ferdig behandlet",
+            nå = {
+                assertTilstander(3.vedtaksperiode, START, AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK, AVSLUTTET_UTEN_UTBETALING)
+            },
+            ønsket = {
+                assertTilstander(3.vedtaksperiode, START, AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK, AVVENTER_BLOKKERENDE_PERIODE)
+            }
+        )
     }
 
     @Test
@@ -343,30 +359,6 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
         håndterOverstyrTidslinje(listOf(ManuellOverskrivingDag(5.januar, Feriedag)))
         assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING)
         assertTilstander(2.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING, AVVENTER_SIMULERING_REVURDERING, AVVENTER_GODKJENNING_REVURDERING, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
-    }
-
-    @Test
-    fun `periode med forlengelse etterfulgt av kort periode - kort periode avsluttes ikke før revurdering er ferdig`() {
-        nyttVedtak(1.januar, 31.januar)
-        forlengVedtak(1.februar, 28.februar)
-
-        nullstillTilstandsendringer()
-        håndterOverstyrTidslinje(listOf(ManuellOverskrivingDag(17.januar, Feriedag)))
-
-        håndterSykmelding(Sykmeldingsperiode(1.april, 16.april, 100.prosent))
-        håndterSøknad(Søknad.Søknadsperiode.Sykdom(1.april, 16.april, 100.prosent))
-
-        assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING)
-        assertTilstander(2.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
-        assertForventetFeil(
-            forklaring = "Vi vet ikke hva ønsket oppførsel egentlig bør være",
-            nå = {
-                assertTilstander(3.vedtaksperiode, START, AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK, AVSLUTTET_UTEN_UTBETALING)
-            },
-            ønsket = {
-                assertTilstander(3.vedtaksperiode, START, AVVENTER_INNTEKTSMELDING_ELLER_HISTORIKK, AVVENTER_BLOKKERENDE_PERIODE)
-            }
-        )
     }
 
     @Test
@@ -543,15 +535,7 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
         håndterOverstyrTidslinje(listOf(ManuellOverskrivingDag(17.januar, Feriedag)))
 
         assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
-        assertForventetFeil(
-            forklaring = "Skal bli grønn når gjenopptaBehandlingEtter-branchen er rebaset inn",
-            ønsket = {
-                assertTilstander(2.vedtaksperiode, AVVENTER_SIMULERING, AVVENTER_BLOKKERENDE_PERIODE)
-            },
-            nå = {
-                assertTilstander(2.vedtaksperiode, AVVENTER_SIMULERING, AVVENTER_UFERDIG)
-            }
-        )
+        assertTilstander(2.vedtaksperiode, AVVENTER_SIMULERING, AVVENTER_BLOKKERENDE_PERIODE)
     }
 
     @Test
@@ -563,15 +547,7 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
         håndterOverstyrTidslinje(listOf(ManuellOverskrivingDag(17.januar, Feriedag)))
 
         assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
-        assertForventetFeil(
-            forklaring = "Skal bli grønn når gjenopptaBehandlingEtter-branchen er rebaset inn",
-            ønsket = {
-                assertTilstander(2.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_BLOKKERENDE_PERIODE)
-            },
-            nå = {
-                assertTilstander(2.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_UFERDIG)
-            }
-        )
+        assertTilstander(2.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_BLOKKERENDE_PERIODE)
     }
 
     @Test
@@ -585,15 +561,7 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
 
         assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
         assertTilstander(2.vedtaksperiode, AVSLUTTET, AVVENTER_REVURDERING)
-        assertForventetFeil(
-            forklaring = "Skal bli grønn når gjenopptaBehandlingEtter-branchen er rebaset inn",
-            ønsket = {
-                assertTilstander(3.vedtaksperiode, AVVENTER_SIMULERING, AVVENTER_BLOKKERENDE_PERIODE)
-            },
-            nå = {
-                assertTilstander(3.vedtaksperiode, AVVENTER_SIMULERING, AVVENTER_UFERDIG)
-            }
-        )
+        assertTilstander(3.vedtaksperiode, AVVENTER_SIMULERING, AVVENTER_BLOKKERENDE_PERIODE)
     }
 
     @Test
@@ -607,15 +575,7 @@ internal class RevurderingV2E2ETest : AbstractEndToEndTest() {
 
         assertTilstander(1.vedtaksperiode, AVSLUTTET, AVVENTER_GJENNOMFØRT_REVURDERING, AVVENTER_HISTORIKK_REVURDERING)
         assertTilstander(2.vedtaksperiode, AVSLUTTET, AVVENTER_REVURDERING)
-        assertForventetFeil(
-            forklaring = "Skal bli grønn når gjenopptaBehandlingEtter-branchen er rebaset inn",
-            ønsket = {
-                assertTilstander(3.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_BLOKKERENDE_PERIODE)
-            },
-            nå = {
-                assertTilstander(3.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_UFERDIG)
-            }
-        )
+        assertTilstander(3.vedtaksperiode, AVVENTER_GODKJENNING, AVVENTER_BLOKKERENDE_PERIODE)
     }
 
     @Test

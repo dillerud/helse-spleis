@@ -351,7 +351,7 @@ internal class Vedtaksperiode private constructor(
     }
 
     internal fun nyPeriodeMedNyFlyt(ny: Vedtaksperiode, hendelse: Søknad) {
-        håndterEndringIEldrePeriode(ny, Vedtaksperiodetilstand::nyPeriodeFørMedNyFlyt, hendelse)
+        håndterEndringIEldrePeriode(ny, Vedtaksperiodetilstand::periodeBehandles, hendelse)
     }
 
     internal fun kanReberegne(other: Vedtaksperiode): Boolean {
@@ -990,7 +990,7 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.forkast(hendelse)
         }
 
-        fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {
+        fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {
             if (Toggle.RevurdereOutOfOrder.enabled) return
             hendelse.error("Mottatt søknad out of order")
             vedtaksperiode.forkast(hendelse)
@@ -1216,12 +1216,12 @@ internal class Vedtaksperiode private constructor(
             overstyrt: Vedtaksperiode,
             pågående: Vedtaksperiode?
         ) {
-            if (vedtaksperiode.arbeidsgiver.finnVedtaksperiodeRettFør(vedtaksperiode) != null) return håndterTidligereTilstøtendeUferdigPeriode(
-                vedtaksperiode,
-                overstyrt,
-                hendelse
-            )
-            return håndterTidligereUferdigPeriode(vedtaksperiode, overstyrt, hendelse)
+            if (Toggle.NyTilstandsflyt.disabled) {
+                return if (vedtaksperiode.arbeidsgiver.finnVedtaksperiodeRettFør(vedtaksperiode) != null)
+                    håndterTidligereTilstøtendeUferdigPeriode(vedtaksperiode, overstyrt, hendelse)
+                else håndterTidligereUferdigPeriode(vedtaksperiode, overstyrt, hendelse)
+            }
+            return periodeBehandles(vedtaksperiode, overstyrt, hendelse)
         }
     }
 
@@ -2150,7 +2150,7 @@ internal class Vedtaksperiode private constructor(
             vedtaksperiode.håndterOverlappendeSøknad(søknad)
         }
 
-        override fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {}
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {}
 
         override fun tidligerePeriodeRebehandles(vedtaksperiode: Vedtaksperiode, hendelse: IAktivitetslogg) {}
 
@@ -2203,14 +2203,14 @@ internal class Vedtaksperiode private constructor(
         override val type: TilstandType = AVVENTER_BLOKKERENDE_PERIODE
 
         override fun entering(vedtaksperiode: Vedtaksperiode, hendelse: IAktivitetslogg) {
-            require(Toggle.NyTilstandsflyt.enabled) { "Skal ikke bruke tilstanden AvventerTidligereEllerOverlappendePerioder uten ny flyt" }
+            require(Toggle.NyTilstandsflyt.enabled) { "Skal ikke bruke tilstanden AvventerBlokkerendePeriode uten ny flyt" }
         }
 
         override fun håndter(vedtaksperiode: Vedtaksperiode, søknad: Søknad) {
             vedtaksperiode.håndterOverlappendeSøknad(søknad)
         }
 
-        override fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {}
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {}
 
         override fun gjenopptaBehandlingNy(vedtaksperiode: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerHistorikk)
@@ -2234,7 +2234,7 @@ internal class Vedtaksperiode private constructor(
 
         override fun nyPeriodeFør(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Sykmelding) {}
 
-        override fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerBlokkerendePeriode)
         }
 
@@ -2318,7 +2318,7 @@ internal class Vedtaksperiode private constructor(
 
         override fun nyPeriodeFør(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Sykmelding) {}
 
-        override fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerBlokkerendePeriode)
         }
 
@@ -2497,7 +2497,7 @@ internal class Vedtaksperiode private constructor(
 
         override fun nyPeriodeFør(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Sykmelding) {}
 
-        override fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerBlokkerendePeriode)
         }
 
@@ -2607,7 +2607,7 @@ internal class Vedtaksperiode private constructor(
 
         override fun nyPeriodeFør(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Sykmelding) {}
 
-        override fun nyPeriodeFørMedNyFlyt(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: Søknad) {
+        override fun periodeBehandles(vedtaksperiode: Vedtaksperiode, ny: Vedtaksperiode, hendelse: IAktivitetslogg) {
             vedtaksperiode.tilstand(hendelse, AvventerBlokkerendePeriode)
         }
 
