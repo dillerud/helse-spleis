@@ -1344,7 +1344,7 @@ internal class Vedtaksperiode private constructor(
                 valider { ytelser.valider(vedtaksperiode.periode, vedtaksperiode.skjæringstidspunkt) }
                 val arbeidsgiverUtbetalinger = arbeidsgiverUtbetalingerFun(vedtaksperiode.jurist())
                 valider("Feil ved kalkulering av utbetalingstidslinjer") {
-                    arbeidsgiver.beregn(this, arbeidsgiverUtbetalinger, vedtaksperiode.periode)
+                    vedtaksperiode.utbetalinger.beregn(this, vedtaksperiode.periode, arbeidsgiverUtbetalinger)
                 }
                 onSuccess {
                     tmpLog.accept(AktivitetsloggDeescalator(ytelser))
@@ -1771,7 +1771,7 @@ internal class Vedtaksperiode private constructor(
                         vedtaksperiode.skjæringstidspunkt
                     )
                     arbeidsgiverUtbetalinger = arbeidsgiverUtbetalingerFun(vedtaksperiode.jurist())
-                    arbeidsgiver.beregn(this, arbeidsgiverUtbetalinger, vedtaksperiode.periode)
+                    vedtaksperiode.utbetalinger.beregn(this, vedtaksperiode.periode, arbeidsgiverUtbetalinger)
                 }
                 onSuccess {
                     if (vedtaksperiode.person.harKunEttAnnetRelevantArbeidsforholdEnn(

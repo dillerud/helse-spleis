@@ -7,6 +7,7 @@ import java.util.UUID
 import no.nav.helse.hendelser.Hendelseskontekst
 import no.nav.helse.hendelser.Periode
 import no.nav.helse.hendelser.Simulering
+import no.nav.helse.hendelser.til
 import no.nav.helse.hendelser.utbetaling.AnnullerUtbetaling
 import no.nav.helse.hendelser.utbetaling.Grunnbeløpsregulering
 import no.nav.helse.hendelser.utbetaling.UtbetalingHendelse
@@ -23,11 +24,14 @@ import no.nav.helse.person.SpesifikkKontekst
 import no.nav.helse.person.UtbetalingVisitor
 import no.nav.helse.person.Vedtaksperiode
 import no.nav.helse.person.builders.VedtakFattetBuilder
+import no.nav.helse.person.etterlevelse.SubsumsjonObserver
+import no.nav.helse.person.infotrygdhistorikk.Infotrygdhistorikk
 import no.nav.helse.serde.reflection.Utbetalingstatus
 import no.nav.helse.sykdomstidslinje.Dag.Companion.replace
 import no.nav.helse.sykdomstidslinje.Sykdomstidslinje
 import no.nav.helse.utbetalingslinjer.Fagområde.Sykepenger
 import no.nav.helse.utbetalingslinjer.Fagområde.SykepengerRefusjon
+import no.nav.helse.utbetalingstidslinje.IUtbetalingstidslinjeBuilder
 import no.nav.helse.utbetalingstidslinje.Utbetalingstidslinje
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -293,7 +297,7 @@ internal class Utbetaling private constructor(
             maksdato: LocalDate,
             forbrukteSykedager: Int,
             gjenståendeSykedager: Int,
-            forrige: List<Utbetaling> = emptyList()
+            forrige: Utbetaling?
         ): Utbetaling {
             return Utbetaling(
                 utbetalinger.aktive().lastOrNull(),
@@ -307,7 +311,7 @@ internal class Utbetaling private constructor(
                 maksdato,
                 forbrukteSykedager,
                 gjenståendeSykedager,
-                forrige.aktive().lastOrNull()
+                forrige
             )
         }
 
@@ -421,7 +425,35 @@ internal class Utbetaling private constructor(
         ): Oppdrag {
             return byggOppdrag(sisteAktive, fødselsnummer, tidslinje, sisteDato, aktivitetslogg, forrige, Sykepenger)
         }
+
+        internal fun beregnetTidslinje(
+            sykdomstidslinje: Sykdomstidslinje,
+            infotrygdhistorikk: Infotrygdhistorikk,
+            organisasjonsnummer: String,
+            subsumsjonObserver: SubsumsjonObserver,
+            periode: Periode,
+            builder: IUtbetalingstidslinjeBuilder,
+            sisteAktive: Utbetaling?
+        ): Utbetalingstidslinje {
+            val sykdomstidslinje = sykdomstidslinje
+                .fremTilOgMed(periode.endInclusive)
+                .takeUnless { it.count() == 0 }
+                ?: return Utbetalingstidslinje()
+            val overskytendeTidslinje = sisteAktive
+                ?.tidslinje(periode.endInclusive.plusDays(1))
+                ?: Utbetalingstidslinje()
+            return infotrygdhistorikk.build(
+                organisasjonsnummer,
+                sykdomstidslinje,
+                builder,
+                subsumsjonObserver
+            ) + overskytendeTidslinje
+        }
+
         internal fun List<Utbetaling>.aktive() = grupperUtbetalinger(Utbetaling::erAktiv)
+        internal fun List<Utbetaling>.aktiv(forrige: Utbetaling) =
+            aktive().singleOrNull { it.korrelasjonsId == forrige.korrelasjonsId }
+
         private fun List<Utbetaling>.utbetalte() = grupperUtbetalinger { it.erUtbetalt() || it.erInFlight() }
 
         private fun List<Utbetaling>.grupperUtbetalinger(filter: (Utbetaling) -> Boolean) =
@@ -543,6 +575,11 @@ internal class Utbetaling private constructor(
         if (this.avstemmingsnøkkel == null) this.avstemmingsnøkkel = avstemmingsnøkkel
     }
     override fun toString() = "$type(${Utbetalingstatus.fraTilstand(tilstand)}) - $periode"
+
+    internal fun tidslinje(fra: LocalDate) : Utbetalingstidslinje {
+        if (fra > periode.endInclusive) return Utbetalingstidslinje()
+        return utbetalingstidslinje().subset(fra til periode.endInclusive)
+    }
 
     internal interface Tilstand {
         fun forkast(utbetaling: Utbetaling, hendelse: IAktivitetslogg) {

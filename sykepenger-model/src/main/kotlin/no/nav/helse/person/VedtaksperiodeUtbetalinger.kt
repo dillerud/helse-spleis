@@ -12,6 +12,7 @@ import no.nav.helse.person.infotrygdhistorikk.Infotrygdhistorikk
 import no.nav.helse.utbetalingslinjer.Utbetaling
 import no.nav.helse.utbetalingslinjer.Utbetaling.Companion.harId
 import no.nav.helse.utbetalingstidslinje.Alder
+import no.nav.helse.utbetalingstidslinje.ArbeidsgiverUtbetalinger
 import no.nav.helse.utbetalingstidslinje.Utbetalingstidslinje
 
 internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver, utbetalinger: List<Utbetaling>) {
@@ -59,6 +60,9 @@ internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver
         siste?.forkast(hendelse)
     }
 
+    internal fun beregn(hendelse: IAktivitetslogg, periode: Periode, arbeidsgiverUtbetalinger: ArbeidsgiverUtbetalinger) =
+        arbeidsgiver.beregn(hendelse, arbeidsgiverUtbetalinger, periode, siste)
+
     internal fun mottaRevurdering(
         hendelse: ArbeidstakerHendelse,
         utbetaling: Utbetaling,
@@ -101,7 +105,7 @@ internal class VedtaksperiodeUtbetalinger(private val arbeidsgiver: Arbeidsgiver
                 forbrukteSykedager = maksimumSykepenger.forbrukteDager(),
                 gjenståendeSykedager = maksimumSykepenger.gjenståendeDager(),
                 periode = periode,
-                forrige = utbetalinger
+                forrige = siste
             ).also { arbeidsgiver.fordelRevurdertUtbetaling(vedtaksperiode, hendelse, it) }
         }
     }

@@ -7,6 +7,7 @@ import no.nav.helse.person.VilkårsgrunnlagHistorikk
 import no.nav.helse.person.etterlevelse.SubsumsjonObserver
 import no.nav.helse.person.infotrygdhistorikk.Infotrygdhistorikk
 import java.time.LocalDate
+import no.nav.helse.utbetalingslinjer.Utbetaling
 
 internal class ArbeidsgiverUtbetalinger(
     private val regler: ArbeidsgiverRegler,
@@ -23,10 +24,11 @@ internal class ArbeidsgiverUtbetalinger(
         aktivitetslogg: IAktivitetslogg,
         organisasjonsnummer: String,
         periode: Periode,
+        sisteAktive: Utbetaling?,
         virkningsdato: LocalDate = periode.endInclusive
     ) {
         val tidslinjer = arbeidsgivere
-            .mapValues { (arbeidsgiver, builder) -> arbeidsgiver.build(subsumsjonObserver, infotrygdhistorikk, builder, periode) }
+            .mapValues { (arbeidsgiver, builder) -> arbeidsgiver.build(subsumsjonObserver, infotrygdhistorikk, builder, sisteAktive, periode) }
             .filterValues { it.isNotEmpty() }
         filtrer(aktivitetslogg, tidslinjer, periode, virkningsdato)
         tidslinjer.forEach { (arbeidsgiver, utbetalingstidslinje) ->
@@ -50,7 +52,7 @@ internal class ArbeidsgiverUtbetalinger(
         )
         arbeidsgivere.forEach { (arbeidsgiver, tidslinje) ->
             Refusjonsgjødsler(
-                tidslinje = tidslinje + arbeidsgiver.utbetalingstidslinje(infotrygdhistorikk),
+                tidslinje = tidslinje.kutt(periode.endInclusive) + arbeidsgiver.utbetalingstidslinje(infotrygdhistorikk),
                 refusjonshistorikk = arbeidsgiver.refusjonshistorikk,
                 infotrygdhistorikk = infotrygdhistorikk,
                 organisasjonsnummer = arbeidsgiver.organisasjonsnummer()

@@ -35,7 +35,6 @@ import no.nav.helse.person.ForkastetVedtaksperiode.Companion.håndterInntektsmel
 import no.nav.helse.person.ForkastetVedtaksperiode.Companion.iderMedUtbetaling
 import no.nav.helse.person.Inntektshistorikk.IkkeRapportert
 import no.nav.helse.person.Vedtaksperiode.AvventerArbeidsgivereRevurdering
-import no.nav.helse.person.Vedtaksperiode.AvventerHistorikk
 import no.nav.helse.person.Vedtaksperiode.AvventerHistorikkRevurdering
 import no.nav.helse.person.Vedtaksperiode.Companion.AVVENTER_GODKJENT_REVURDERING
 import no.nav.helse.person.Vedtaksperiode.Companion.ER_ELLER_HAR_VÆRT_AVSLUTTET
@@ -69,6 +68,8 @@ import no.nav.helse.utbetalingslinjer.Feriepengeutbetaling
 import no.nav.helse.utbetalingslinjer.Feriepengeutbetaling.Companion.gjelderFeriepengeutbetaling
 import no.nav.helse.utbetalingslinjer.Oppdrag
 import no.nav.helse.utbetalingslinjer.Utbetaling
+import no.nav.helse.utbetalingslinjer.Utbetaling.Companion.aktiv
+import no.nav.helse.utbetalingslinjer.Utbetaling.Companion.beregnetTidslinje
 import no.nav.helse.utbetalingslinjer.Utbetaling.Companion.harNærliggendeUtbetaling
 import no.nav.helse.utbetalingslinjer.Utbetaling.Companion.utbetaltTidslinje
 import no.nav.helse.utbetalingslinjer.Utbetaling.Utbetalingtype
@@ -402,7 +403,7 @@ internal class Arbeidsgiver private constructor(
         forbrukteSykedager: Int,
         gjenståendeSykedager: Int,
         periode: Periode,
-        forrige: List<Utbetaling>
+        forrige: Utbetaling?
     ): Utbetaling {
         return Utbetalingstidslinjeberegning.lagRevurdering(
             beregnetUtbetalingstidslinjer,
@@ -413,7 +414,7 @@ internal class Arbeidsgiver private constructor(
             maksdato,
             forbrukteSykedager,
             gjenståendeSykedager,
-            forrige,
+            forrige?.let { utbetalinger.aktiv(it) },
             organisasjonsnummer
         ).also { nyUtbetaling(it) }
     }
@@ -1112,15 +1113,16 @@ internal class Arbeidsgiver private constructor(
         subsumsjonObserver: SubsumsjonObserver,
         infotrygdhistorikk: Infotrygdhistorikk,
         builder: IUtbetalingstidslinjeBuilder,
+        sisteAktive: Utbetaling?,
         periode: Periode
     ): Utbetalingstidslinje {
-        val sykdomstidslinje = sykdomstidslinje().fremTilOgMed(periode.endInclusive).takeUnless { it.count() == 0 } ?: return Utbetalingstidslinje()
-        return infotrygdhistorikk.build(organisasjonsnummer, sykdomstidslinje, builder, subsumsjonObserver)
+        return beregnetTidslinje(sykdomstidslinje(), infotrygdhistorikk, organisasjonsnummer, subsumsjonObserver, periode, builder, sisteAktive)
     }
 
-    internal fun beregn(aktivitetslogg: IAktivitetslogg, arbeidsgiverUtbetalinger: ArbeidsgiverUtbetalinger, periode: Periode): Boolean {
+    internal fun beregn(aktivitetslogg: IAktivitetslogg, arbeidsgiverUtbetalinger: ArbeidsgiverUtbetalinger, periode: Periode, forrige: Utbetaling?): Boolean {
+        val sisteAktive = forrige?.let { utbetalinger.aktiv(forrige) }
         try {
-            arbeidsgiverUtbetalinger.beregn(aktivitetslogg, organisasjonsnummer, periode)
+            arbeidsgiverUtbetalinger.beregn(aktivitetslogg, organisasjonsnummer, periode, sisteAktive = sisteAktive)
         } catch (err: UtbetalingstidslinjeBuilderException) {
             err.logg(aktivitetslogg)
         }
